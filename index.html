@@ -276,6 +276,32 @@
   }
   .field.field-error .hint{ color: #c0392b; }
 
+  #uploadProgress{ margin-top: 14px; }
+  .upload-track{ height: 8px; background: var(--accent-soft); border-radius: 99px; overflow: hidden; }
+  .upload-bar{ height: 100%; width: 0; background: var(--accent); transition: width .3s ease; }
+  .upload-text{ font-size: 12.5px; color: var(--ink-dim); margin-top: 8px; text-align: center; }
+
+  /* Spacing fix: the last field inside the printer group was losing its bottom margin */
+  #printerFields > .field:last-child{ margin-bottom: 16px; }
+
+  .notice-onsite{
+    display:flex; gap:10px; align-items:flex-start;
+    background:#fff6e5; border:1px solid #f0d49b; color:#6b4a10;
+    border-radius:10px; padding:12px 14px; margin: 16px 0 0;
+    font-size:13.5px; line-height:1.5; text-align:left;
+  }
+  .notice-onsite b{ color:#4a3208; }
+
+  .tnc-field{ margin: 8px 0 16px; }
+  .tnc-label{
+    display:flex; align-items:flex-start; gap:10px;
+    font-size:13.5px; color: var(--ink); cursor:pointer; margin:0;
+  }
+  .tnc-label input{ width:18px; height:18px; margin-top:1px; flex-shrink:0; accent-color: var(--accent); }
+  .tnc-label a{ color: var(--ink); font-weight:600; text-decoration: underline; }
+  .field.field-error .tnc-label{ color:#c0392b; }
+  .field.field-error .tnc-label input{ outline: 2px solid #c0392b; outline-offset: 1px; }
+
   .form-error-status{
     display:none;
     background: #fdf2f2;
@@ -514,6 +540,10 @@
       <a href="tel:+6589867382">+65 8986 7382</a>
       <a href="mailto:layerbylayer.sg@gmail.com">layerbylayer.sg@gmail.com</a>
     </div>
+    <div class="notice-onsite">
+      <span aria-hidden="true">&#9888;</span>
+      <span><b>We do not offer onsite servicing.</b> All work is done at our workshop. Drop off your printer with us, or choose our pick-up &amp; drop-off service below.</span>
+    </div>
   </header>
   </div>
 
@@ -619,6 +649,27 @@
 
     <section class="block">
       <div class="block-head"><h2 class="block-title">Printer</h2></div>
+
+      <div class="field">
+        <label>What needs servicing? <span class="req">*</span></label>
+        <div class="pill-group">
+          <label class="pill">
+            <input type="radio" name="serviceType" value="printer" onclick="applyServiceType()">
+            <span>Printer only</span>
+          </label>
+          <label class="pill">
+            <input type="radio" name="serviceType" value="printer_mfms" onclick="applyServiceType()">
+            <span>Printer + MFMS</span>
+          </label>
+          <label class="pill">
+            <input type="radio" name="serviceType" value="mfms" onclick="applyServiceType()">
+            <span>MFMS only</span>
+          </label>
+        </div>
+        <div class="hint">MFMS = multi-colour &amp; filament management system, e.g. AMS Lite, AMS 1/2, CFS.</div>
+      </div>
+
+      <div id="printerFields" style="display:none;">
       <div class="row2">
         <div class="field">
           <label for="brand">3D printer brand <span class="req">*</span></label>
@@ -651,23 +702,11 @@
         <label for="serialNo">Printer Serial No. (SN) <span class="req">*</span></label>
         <input type="text" id="serialNo" name="serialNo" placeholder="Check printer settings, or a sticker on your printer">
       </div>
-
-      <div class="field">
-        <label>Multi-Color &amp; Multi-Material System (i.e AMS 1/2, CFS...) <span class="req">*</span></label>
-        <div class="pill-group">
-          <label class="pill">
-            <input type="radio" name="hasMultiSystem" value="yes" onclick="toggleMultiSystem(true)">
-            <span>Yes</span>
-          </label>
-          <label class="pill">
-            <input type="radio" name="hasMultiSystem" value="no" onclick="toggleMultiSystem(false)">
-            <span>No</span>
-          </label>
-        </div>
       </div>
 
+
       <div class="field" id="multiSystemField" style="display:none;">
-        <label for="multiSystem">Which system? <span class="req">*</span></label>
+        <label for="multiSystem">Which MFMS? <span class="req">*</span></label>
         <select id="multiSystem" name="multiSystem">
           <option value="">Select system</option>
           <option value="AMS Lite">AMS Lite</option>
@@ -682,6 +721,11 @@
       <div class="field" id="otherMultiSystemField" style="display:none;">
         <label for="otherMultiSystem">Please specify system <span class="req">*</span></label>
         <input type="text" id="otherMultiSystem" name="otherMultiSystem" placeholder="e.g. AMS Lite, other brand's system">
+      </div>
+
+      <div class="field" id="mfmsSerialNoField" style="display:none;">
+        <label for="mfmsSerialNo">MFMS Serial No. (SN) <span class="req">*</span></label>
+        <input type="text" id="mfmsSerialNo" name="mfmsSerialNo" placeholder="Check the sticker on your AMS / CFS unit">
       </div>
     </section>
 
@@ -710,7 +754,7 @@
       <div class="field">
         <label>Submit photos / videos</label>
         <div class="drop" id="dropZone">
-          <div class="drop-label"><b>Tap to upload</b> or drag files here, select multiple, or tap again to add more</div>
+          <div class="drop-label"><b>Tap to upload</b> or drag files here, select multiple, or tap again to add more. Videos welcome, up to 500MB each.</div>
           <input type="file" id="fileInput" multiple accept="image/*,video/*">
           <div id="fileList"></div>
         </div>
@@ -769,6 +813,7 @@
 
       <div class="field">
         <label>Need pick-up &amp; drop-off service? <span class="req">*</span></label>
+        <div class="hint" style="margin:-2px 0 8px;">Please note we do not service printers onsite. Pick-up &amp; drop-off brings your printer to our workshop and back.</div>
         <div class="pill-group">
           <label class="pill">
             <input type="radio" name="needTransport" value="yes" onclick="toggleTransportAddress(true)">
@@ -817,9 +862,20 @@
       </div>
     </section>
 
+    <div class="field tnc-field">
+      <label class="tnc-label">
+        <input type="checkbox" id="agreeTerms" name="agreeTerms">
+        <span>I have read and agree to the <a href="https://docs.google.com/document/d/1DngWODjNj8ZGSHCc7oOXkODaWqwWEJ5kUnDf0msr7Rc/view?usp=sharing" target="_blank" rel="noopener">Terms and Conditions</a>. <span class="req">*</span></span>
+      </label>
+    </div>
+
     <div class="form-error-status" id="formErrorStatus"></div>
     <div class="submit-row">
       <button type="submit" class="submit">Submit</button>
+    </div>
+    <div id="uploadProgress" style="display:none;">
+      <div class="upload-track"><div class="upload-bar" id="uploadProgressBar"></div></div>
+      <div class="upload-text" id="uploadProgressText"></div>
     </div>
   </form>
 
@@ -846,6 +902,23 @@
     }
   }
 
+  function getServiceType(){
+    const r = document.querySelector('input[name="serviceType"]:checked');
+    return r ? r.value : '';
+  }
+
+  function applyServiceType(){
+    const type = getServiceType();
+    const needsPrinter = (type === 'printer' || type === 'printer_mfms');
+    const needsMfms = (type === 'printer_mfms' || type === 'mfms');
+
+    document.getElementById('printerFields').style.display = needsPrinter ? 'block' : 'none';
+    document.getElementById('mfmsSerialNoField').style.display = needsMfms ? 'block' : 'none';
+
+    toggleMultiSystem(needsMfms);
+    applyUnlistedTransportRule();
+  }
+
   function toggleOtherMultiSystemField(show){
     const field = document.getElementById('otherMultiSystemField');
     const input = document.getElementById('otherMultiSystem');
@@ -855,6 +928,7 @@
 
   document.getElementById('multiSystem').addEventListener('change', function(){
     toggleOtherMultiSystemField(this.value === 'Other');
+    applyUnlistedTransportRule();
   });
 
   function toggleTransportAddress(show){
@@ -868,7 +942,11 @@
   function applyUnlistedTransportRule(){
     const brand = document.getElementById('brand').value;
     const model = document.getElementById('model').value;
-    const isUnlisted = (brand === 'Other') || (model === 'Other');
+    const type = getServiceType();
+    const mfms = document.getElementById('multiSystem').value;
+    const isUnlisted = (type === 'mfms')
+      ? (mfms === 'Other')
+      : ((brand === 'Other') || (model === 'Other'));
 
     const tbcNote = document.getElementById('transportTbcNote');
     const transportChosen = document.querySelector('input[name="needTransport"]:checked');
@@ -1072,16 +1150,19 @@
     check(!!g('name'), 'name');
     check(/^[0-9]{8}$/.test(g('contact')), 'contact');
     check(/^\S+@\S+\.\S+$/.test(g('email')), 'email');
-    check(!!g('brand'), 'brand');
-    check(!!g('model'), 'model');
-    if (g('brand') === 'Other') check(!!g('otherBrand'), 'otherBrand');
-    if (g('model') === 'Other') check(!!g('otherModel'), 'otherModel');
-    check(!!g('serialNo'), 'serialNo');
-
-    const multiSystemChosen = checkRadioGroup('hasMultiSystem');
-    if (multiSystemChosen && multiSystemChosen.value === 'yes') {
+    const serviceChosen = checkRadioGroup('serviceType');
+    const type = serviceChosen ? serviceChosen.value : '';
+    if (type === 'printer' || type === 'printer_mfms') {
+      check(!!g('brand'), 'brand');
+      check(!!g('model'), 'model');
+      if (g('brand') === 'Other') check(!!g('otherBrand'), 'otherBrand');
+      if (g('model') === 'Other') check(!!g('otherModel'), 'otherModel');
+      check(!!g('serialNo'), 'serialNo');
+    }
+    if (type === 'printer_mfms' || type === 'mfms') {
       check(!!g('multiSystem'), 'multiSystem');
       if (g('multiSystem') === 'Other') check(!!g('otherMultiSystem'), 'otherMultiSystem');
+      check(!!g('mfmsSerialNo'), 'mfmsSerialNo');
     }
 
     check(!!g('issue'), 'issue');
@@ -1097,6 +1178,8 @@
     if (g('source') === 'Other') check(!!g('otherSource'), 'otherSource');
     if (g('source') === 'Shopee') check(!!g('shopeeUser'), 'shopeeUser');
     if (g('source') === 'Carousell') check(!!g('carousellUser'), 'carousellUser');
+
+    check(document.getElementById('agreeTerms').checked, 'agreeTerms');
 
     return errors;
   }
@@ -1140,78 +1223,145 @@
 
     const transportChosen = document.querySelector('input[name="needTransport"]:checked');
     const needTransport = transportChosen.value;
-    const multiSystemChosen = document.querySelector('input[name="hasMultiSystem"]:checked');
+    const serviceType = getServiceType();
     const usernameCombined = g('shopeeUser') || g('carousellUser') || '';
 
-    const totalBytes = selectedFiles.reduce((sum, f) => sum + f.size, 0);
-    if (totalBytes > 45 * 1024 * 1024) {
-      alert('Your photos/videos add up to more than 45MB, which is too large to upload here. Please remove a file or two, or email the larger files directly to layerbylayer.sg@gmail.com.');
+    const MAX_FILE_MB = 500;
+    const tooBig = selectedFiles.filter(f => f.size > MAX_FILE_MB * 1024 * 1024);
+    if (tooBig.length) {
+      alert('These files are over ' + MAX_FILE_MB + 'MB, please trim or shorten them and try again:\n\n' + tooBig.map(f => f.name).join('\n'));
       return;
     }
 
     const submitBtn = document.querySelector('button.submit');
+    const progressWrap = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const progressText = document.getElementById('uploadProgressText');
     submitBtn.classList.add('loading');
-    submitBtn.textContent = selectedFiles.length ? 'Uploading…' : 'Sending…';
+    submitBtn.textContent = 'Sending…';
 
-    const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const finalMultiSystem = g('multiSystem') === 'Other' ? g('otherMultiSystem') : g('multiSystem');
+    let finalBrand, finalModel;
+    if (serviceType === 'mfms') {
+      // No printer involved: brand is inferred from the MFMS unit itself.
+      const mfms = g('multiSystem');
+      finalBrand = (mfms.indexOf('AMS') === 0) ? 'Bambu Lab' : (mfms.indexOf('CFS') === 0 ? 'Creality' : 'Other');
+      finalModel = '';
+    } else {
+      finalBrand = g('brand') === 'Other' ? g('otherBrand') : g('brand');
+      finalModel = g('model') === 'Other' ? g('otherModel') : g('model');
+    }
+    const serviceTypeLabel = { printer: 'Printer only', printer_mfms: 'Printer + MFMS', mfms: 'MFMS only' }[serviceType];
+
+    const payload = {
+      name: g('name'),
+      contact: g('contact'),
+      email: g('email'),
+      brand: finalBrand,
+      model: finalModel,
+      serviceType: serviceTypeLabel,
+      serialNo: (serviceType === 'mfms') ? '' : g('serialNo'),
+      mfmsSerialNo: (serviceType === 'printer') ? '' : g('mfmsSerialNo'),
+      ams: (serviceType === 'printer') ? 'No' : finalMultiSystem,
+      issue: g('issue'),
+      lastAction: g('lastAction'),
+      tried: g('tried'),
+      errorCode: g('errorCode'),
+      needTransport: needTransport === 'yes' ? 'Yes' : 'No',
+      transportAddress: needTransport === 'yes' ? g('transportAddress') : '',
+      source: g('source') === 'Other' ? ('Other: ' + g('otherSource')) : g('source'),
+      username: usernameCombined,
+      expectFiles: selectedFiles.length > 0
+    };
+
+    const postJson = (body) => fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) })
+      .then(r => r.json())
+      .then(res => { if (res.result !== 'success') throw new Error(res.message || 'Request failed'); return res; });
+
+    const sliceToBase64 = (blob) => new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onload = () => resolve(reader.result.split(',')[1] || '');
       reader.onerror = reject;
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(blob);
     });
 
-    Promise.all(selectedFiles.map(f => fileToBase64(f)))
-      .then((base64List) => {
-        const filesPayload = selectedFiles.map((f, i) => ({
-          name: f.name,
-          mimeType: f.type || 'application/octet-stream',
-          data: base64List[i]
-        }));
+    // Pieces must be a multiple of 256KB for Google Drive's resumable upload.
+    const CHUNK = 4 * 1024 * 1024;
+    const totalUploadBytes = selectedFiles.reduce((sum, f) => sum + f.size, 0);
+    let bytesDone = 0;
 
-        const finalBrand = g('brand') === 'Other' ? g('otherBrand') : g('brand');
-        const finalModel = g('model') === 'Other' ? g('otherModel') : g('model');
-        const finalMultiSystem = g('multiSystem') === 'Other' ? g('otherMultiSystem') : g('multiSystem');
+    const showProgress = (fileIndex) => {
+      const pct = totalUploadBytes ? Math.floor(bytesDone / totalUploadBytes * 100) : 100;
+      progressBar.style.width = pct + '%';
+      progressText.textContent = 'Uploading file ' + (fileIndex + 1) + ' of ' + selectedFiles.length + ' (' + pct + '%). Please keep this page open.';
+    };
 
-        const payload = {
-          name: g('name'),
-          contact: g('contact'),
-          email: g('email'),
-          brand: finalBrand,
-          model: finalModel,
-          serialNo: g('serialNo'),
-          ams: multiSystemChosen.value === 'yes' ? finalMultiSystem : 'No',
-          issue: g('issue'),
-          lastAction: g('lastAction'),
-          tried: g('tried'),
-          errorCode: g('errorCode'),
-          needTransport: needTransport === 'yes' ? 'Yes' : 'No',
-          transportAddress: needTransport === 'yes' ? g('transportAddress') : '',
-          source: g('source') === 'Other' ? ('Other: ' + g('otherSource')) : g('source'),
-          username: usernameCombined,
-          files: filesPayload
-        };
+    async function uploadFile(file, index, folderId) {
+      const start = await postJson({ action: 'startUpload', folderId: folderId, name: file.name, mimeType: file.type || 'application/octet-stream', size: file.size });
+      for (let offset = 0; offset < file.size; offset += CHUNK) {
+        const piece = file.slice(offset, Math.min(offset + CHUNK, file.size));
+        const data = await sliceToBase64(piece);
+        let attempt = 0;
+        while (true) {
+          try {
+            await postJson({ action: 'uploadChunk', sessionUrl: start.sessionUrl, offset: offset, total: file.size, data: data });
+            break;
+          } catch (err) {
+            if (++attempt >= 3) throw err;
+            await new Promise(r => setTimeout(r, 1500 * attempt));
+          }
+        }
+        bytesDone += piece.size;
+        showProgress(index);
+      }
+    }
 
-        return fetch(SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          body: JSON.stringify(payload)
-        });
-      })
-      .then(() => {
-        document.getElementById('supportForm').style.display = 'none';
-        const successPanel = document.getElementById('successPanel');
-        const successMessage = document.getElementById('successMessage');
-        successMessage.textContent = needTransport === 'yes'
-          ? "We've logged your request and saved any photos or videos you attached. We'll contact you shortly to arrange pick-up."
-          : "We've logged your request and saved any photos or videos you attached. We'll be in touch once we've reviewed it.";
-        successPanel.style.display = 'block';
-        successPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      })
-      .catch(() => {
+    const showSuccess = (failedFiles) => {
+      document.getElementById('supportForm').style.display = 'none';
+      const successPanel = document.getElementById('successPanel');
+      const successMessage = document.getElementById('successMessage');
+      let msg = needTransport === 'yes'
+        ? "We've logged your request. We'll contact you shortly to arrange pick-up."
+        : "We've logged your request. We'll be in touch once we've reviewed it.";
+      if (failedFiles.length) {
+        msg += '\n\nThese files did not upload: ' + failedFiles.join(', ') + '. Please WhatsApp them to us at +65 8986 7382.';
+      }
+      successMessage.textContent = msg;
+      successMessage.style.whiteSpace = 'pre-line';
+      successPanel.style.display = 'block';
+      successPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    (async () => {
+      let intake;
+      try {
+        intake = await postJson(payload);
+      } catch (err) {
         submitBtn.classList.remove('loading');
         submitBtn.textContent = 'Submit';
-        alert('Something went wrong sending your request. Please check your connection and try again, or email us directly at layerbylayer.sg@gmail.com.');
-      });
+        alert('Something went wrong sending your request. Please check your connection and try again, or WhatsApp us at +65 8986 7382.');
+        return;
+      }
+
+      // Details are saved at this point, so a failed upload never loses the job.
+      const failedFiles = [];
+      if (selectedFiles.length && intake.folderId) {
+        submitBtn.textContent = 'Uploading…';
+        progressWrap.style.display = 'block';
+        showProgress(0);
+        for (let i = 0; i < selectedFiles.length; i++) {
+          const before = bytesDone;
+          try {
+            await uploadFile(selectedFiles[i], i, intake.folderId);
+          } catch (err) {
+            failedFiles.push(selectedFiles[i].name);
+            bytesDone = before + selectedFiles[i].size;
+            showProgress(i);
+          }
+        }
+      }
+      showSuccess(failedFiles);
+    })();
   });
 </script>
 
