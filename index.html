@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Layer by Layer: Maintenance, Diagnosis & Repair</title>
+<title>Layer By Layer: Maintenance, Diagnosis & Repair</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -705,22 +705,34 @@
       </div>
 
 
-      <div class="field" id="multiSystemField" style="display:none;">
-        <label for="multiSystem">Which MFMS? <span class="req">*</span></label>
-        <select id="multiSystem" name="multiSystem">
-          <option value="">Select system</option>
-          <option value="AMS Lite">AMS Lite</option>
-          <option value="AMS 1">AMS 1</option>
-          <option value="AMS 2">AMS 2</option>
-          <option value="CFS">CFS</option>
-          <option value="CFS-C">CFS-C</option>
-          <option value="Other">Other / not listed</option>
-        </select>
+      <div id="multiSystemField" style="display:none;">
+      <div class="row2">
+        <div class="field">
+          <label for="mfmsBrand">MFMS brand <span class="req">*</span></label>
+          <select id="mfmsBrand" name="mfmsBrand">
+            <option value="">Select brand</option>
+            <option value="Bambu Lab">Bambu Lab</option>
+            <option value="Creality">Creality</option>
+            <option value="Other">Other / not listed</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="multiSystem">MFMS model <span class="req">*</span></label>
+          <select id="multiSystem" name="multiSystem" disabled>
+            <option value="">Select brand first</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field" id="otherMfmsBrandField" style="display:none;">
+        <label for="otherMfmsBrand">Please specify MFMS brand <span class="req">*</span></label>
+        <input type="text" id="otherMfmsBrand" name="otherMfmsBrand" placeholder="e.g. Anycubic, Elegoo">
       </div>
 
       <div class="field" id="otherMultiSystemField" style="display:none;">
-        <label for="otherMultiSystem">Please specify system <span class="req">*</span></label>
-        <input type="text" id="otherMultiSystem" name="otherMultiSystem" placeholder="e.g. AMS Lite, other brand's system">
+        <label for="otherMultiSystem">Please specify MFMS model <span class="req">*</span></label>
+        <input type="text" id="otherMultiSystem" name="otherMultiSystem" placeholder="e.g. ACE Pro, CANVAS">
+      </div>
       </div>
 
       <div class="field" id="mfmsSerialNoField" style="display:none;">
@@ -865,7 +877,7 @@
     <div class="field tnc-field">
       <label class="tnc-label">
         <input type="checkbox" id="agreeTerms" name="agreeTerms">
-        <span>I have read and agree to the <a href="https://docs.google.com/document/d/1DngWODjNj8ZGSHCc7oOXkODaWqwWEJ5kUnDf0msr7Rc/view?usp=sharing" target="_blank" rel="noopener">Terms and Conditions</a>. <span class="req">*</span></span>
+        <span>I have read and agree to the <a href="https://docs.google.com/document/d/1IlmLCRt_RN5v0LFTn-UTru5KoSzqm3WO/edit?usp=sharing&ouid=110792326083115985332&rtpof=true&sd=true" target="_blank" rel="noopener">Terms and Conditions</a>. <span class="req">*</span></span>
       </label>
     </div>
 
@@ -880,7 +892,7 @@
   </form>
 
   <footer>
-    <span>Layer by Layer · Singapore</span>
+    <span>Layer By Layer · Singapore</span>
     <span>Maintenance, Diagnosis &amp; Repair</span>
   </footer>
 
@@ -897,10 +909,35 @@
     const input = document.getElementById('multiSystem');
     field.style.display = show ? 'block' : 'none';
     if (!show) {
-      input.value = '';
-      toggleOtherMultiSystemField(false);
+      document.getElementById('mfmsBrand').value = '';
+      fillMfmsModels();
     }
   }
+
+  const MFMS_MODELS = { 'Bambu Lab': ['AMS Lite', 'AMS 1', 'AMS 2', 'AMS HT'], 'Creality': ['CFS', 'CFS-C'] };
+
+  // Same pattern as the printer: pick the brand, then the model list for that brand.
+  function fillMfmsModels(){
+    const brand = document.getElementById('mfmsBrand').value;
+    const sel = document.getElementById('multiSystem');
+    document.getElementById('otherMfmsBrandField').style.display = (brand === 'Other') ? 'block' : 'none';
+    if (brand !== 'Other') document.getElementById('otherMfmsBrand').value = '';
+    if (!brand) {
+      sel.disabled = true;
+      sel.innerHTML = '<option value="">Select brand first</option>';
+    } else if (brand === 'Other') {
+      sel.disabled = true;
+      sel.innerHTML = '<option value="Other" selected>N/A, please specify below</option>';
+    } else {
+      sel.disabled = false;
+      sel.innerHTML = '<option value="">Select model</option>'
+        + MFMS_MODELS[brand].map(m => '<option value="' + m + '">' + m + '</option>').join('')
+        + '<option value="Other">Other / not listed</option>';
+    }
+    toggleOtherMultiSystemField(sel.value === 'Other');
+    applyUnlistedTransportRule();
+  }
+  document.getElementById('mfmsBrand').addEventListener('change', fillMfmsModels);
 
   function getServiceType(){
     const r = document.querySelector('input[name="serviceType"]:checked');
@@ -1160,6 +1197,8 @@
       check(!!g('serialNo'), 'serialNo');
     }
     if (type === 'printer_mfms' || type === 'mfms') {
+      check(!!g('mfmsBrand'), 'mfmsBrand');
+      if (g('mfmsBrand') === 'Other') check(!!g('otherMfmsBrand'), 'otherMfmsBrand');
       check(!!g('multiSystem'), 'multiSystem');
       if (g('multiSystem') === 'Other') check(!!g('otherMultiSystem'), 'otherMultiSystem');
       check(!!g('mfmsSerialNo'), 'mfmsSerialNo');
@@ -1241,11 +1280,11 @@
     submitBtn.textContent = 'Sending…';
 
     const finalMultiSystem = g('multiSystem') === 'Other' ? g('otherMultiSystem') : g('multiSystem');
+    const finalMfmsBrand = g('mfmsBrand') === 'Other' ? g('otherMfmsBrand') : g('mfmsBrand');
     let finalBrand, finalModel;
     if (serviceType === 'mfms') {
-      // No printer involved: brand is inferred from the MFMS unit itself.
-      const mfms = g('multiSystem');
-      finalBrand = (mfms.indexOf('AMS') === 0) ? 'Bambu Lab' : (mfms.indexOf('CFS') === 0 ? 'Creality' : 'Other');
+      // No printer involved: older scripts read the MFMS brand from brand.
+      finalBrand = finalMfmsBrand;
       finalModel = '';
     } else {
       finalBrand = g('brand') === 'Other' ? g('otherBrand') : g('brand');
@@ -1262,7 +1301,8 @@
       serviceType: serviceTypeLabel,
       serialNo: (serviceType === 'mfms') ? '' : g('serialNo'),
       mfmsSerialNo: (serviceType === 'printer') ? '' : g('mfmsSerialNo'),
-      ams: (serviceType === 'printer') ? 'No' : finalMultiSystem,
+      ams: (serviceType === 'printer') ? '' : finalMultiSystem,
+      mfmsBrand: (serviceType === 'printer') ? '' : finalMfmsBrand,
       issue: g('issue'),
       lastAction: g('lastAction'),
       tried: g('tried'),
